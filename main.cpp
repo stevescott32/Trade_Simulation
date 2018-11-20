@@ -11,14 +11,49 @@ static const int ROUNDS = 10;
 static const int TRADE_ITERATIONS = 10; 
 static const int PRODUCTIVITY = 10; 
 static const int CONSUMPTION = 10; 
+static const int MAX_GOOD = 10; 
 
+/**
+ * calculate the utility for a single good
+ */
+double getSingleUtility(int productionProfile, int good) 
+{
+    switch(productionProfile) 
+    {
+        case 0:
+            return good;
+        case 1:
+           return MAX_GOOD - good; 
+        case 2:
+           if(good % 2 == 1)
+               return 8; 
+           else
+               return 3;   
+        case 3:
+           if(good % 2 == 0)
+               return 8; 
+           else
+               return 3;   
+    }
+}
+
+/**
+ * calculate the utility for all goods owned by the individual
+ */
 double getTotalUtility(int productionProfile, std::deque<int>& goods)
 {
     double utility = 0.0; 
+    for(int i = 0; i < goods.size(); ++i)
+    {
+        utility += getSingleUtility(productionProfile, goods[i]); 
+    }
 
     return utility; 
 }
 
+/**
+ * removes a set of goods from the individual's ownership and adds them to myConsumption
+ */ 
 void consumeGoods(int howMany, std::deque<int>& goods, int& myConsumption)
 {
     for(int i = 0; i < howMany; i++)
@@ -28,6 +63,9 @@ void consumeGoods(int howMany, std::deque<int>& goods, int& myConsumption)
     }
 }
 
+/** 
+ * This function creates additional goods based on the individual's production profile
+ */
 void produceGoods(int productionProfile, int howMany, std::deque<int>& goods, int size)
 {
     for(int i = 0; i < howMany; i++)
@@ -57,6 +95,7 @@ int main(int argc, char** argv)
     for(int iteration = 0; iteration < TRADE_ITERATIONS; iteration++)
     {
         produceGoods(productionProfile, PRODUCTIVITY, goods, size); 
+        std::cout << rank << " produced " << PRODUCTIVITY << " more goods and now has a value of$" << getTotalUtility(productionProfile, goods) << std::endl; 
         //trade(); 
         consumeGoods(CONSUMPTION, goods, myConsumption);
     }
