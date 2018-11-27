@@ -132,6 +132,20 @@ int main(int argc, char** argv)
 
     std::cout << rank << " produced $" << myProduction << " and consumed $" << myConsumption << std::endl; 
 
+    int increase = myConsumption - myProduction; 
+    MPI_Send(&increase, 1, MPI_INT, 0, 0, MCW);
+    if(rank == 0)
+    {
+        int tmp = 0; 
+        int total = 0; 
+        for(int processor = 0; processor < size; processor++)
+        {
+            MPI_Recv(&tmp, 1, MPI_INT, MPI_ANY_SOURCE, 0, MCW, MPI_STATUS_IGNORE);
+            total += tmp; 
+        }
+        std::cout << "Trade increased the value by $" << total << " using " << size << " processors" << std::endl; 
+    }
+
     MPI_Finalize();
 
     return 0;
