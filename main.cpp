@@ -3,6 +3,7 @@
 #include <mpi.h>
 #include <random>
 #include <vector>
+#include <time.h>
 
 #define MCW MPI_COMM_WORLD
 
@@ -12,6 +13,9 @@ static const int TRADE = 10;
 static const int PRODUCTIVITY = 10; 
 static const int CONSUMPTION = 10; 
 static const int MAX_GOOD = 10; 
+
+// Profile Settings
+static const int MAX_PROFILE = 4; 
 
 /**
  * calculate the utility for a single good
@@ -35,7 +39,8 @@ double getSingleUtility(int preferenceProfile, int good)
             else
                 return 3;   
         default:
-            return 5;   
+            std::cout << "Error: profile " << preferenceProfile << " is not a defined case " << std::endl; 
+            return 0;   
     }
 }
 
@@ -117,16 +122,22 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MCW, &rank);
     MPI_Comm_size(MCW, &size);
 
-    srand(rank); 
+    srand(rank + time(NULL)); 
 
-    int productionProfile = rand() % size; 
-    int preferenceProfile = rand() % size; 
+    int productionProfile = rand() % MAX_PROFILE; 
+    int preferenceProfile = rand() % MAX_PROFILE; 
     std::deque<int> goods; 
+    int partner; 
 
     for(int iteration = 0; iteration < ROUNDS; iteration++)
     {
         produceGoods(productionProfile, preferenceProfile, PRODUCTIVITY, goods, size, myProduction); 
-        trade(TRADE, (rank + 1)%size, preferenceProfile, goods); 
+        int offset = (-1 * ((iteration + rank)  % 2) + ((iteration + rank + 1) % 2)); 
+        if(rank == 0 && offset < 0) 
+            partner = size - 1; 
+        else 
+            partner = (rank + offset) % size; 
+        trade(TRADE, partner, preferenceProfile, goods); 
         consumeGoods(CONSUMPTION, goods, preferenceProfile, myConsumption);
     }
 
